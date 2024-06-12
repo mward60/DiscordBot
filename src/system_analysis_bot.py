@@ -1,5 +1,5 @@
 import discord, random
-from discord import app_commands, Button
+from discord import app_commands, Button, Interaction
 from typing import Literal, Optional
 
 # This is what allows our code to interface with Discord
@@ -9,16 +9,19 @@ tree = app_commands.CommandTree(client)
 
 # Unique bot token that can't be put online or else Discord forces a re-generation
 TOKEN='MTIyNDQzMTU4ODcxMzAzNzgyNA.GJfs0-.Gv3YsfrsL1rwAWIIwUAweE9XBNOoVoxBfK_s7A'
+# (cbwolfe94) This is the token I generated for the test discord server I set up. The above token probably isn't working anymore because you might
+# have generated a new token.
+CBWOLFE94_TOKEN = "MTI1MDI5NDQzMTE0NDIxODcwNw.GOyjmb.ENwN_vLjfzPMFuYE1WVnTK_bGgvzsZ9xV5DAXY"
 
 @client.event
-async def on_ready():
-    """ Sets the bot to be "playing Dungeons and Dragons"
+async def on_ready() -> None:
+    """ Sets the bot to "Playing Dungeons and Dragons"
     """
 
     print("Setting bot activity...")
-    activity = discord.Game(name="/roll", type=3)
-    await client.change_presence(status = discord.Status.idle, activity=activity)
-    print(f"Bot activity set to {activity}.")
+    dnd_game = discord.Game(name="Dungeons and Dragons", type = 3)
+    await client.change_presence(activity = dnd_game, status = discord.Status.idle)
+    print(f"Bot activity set to {dnd_game}.")
     
     # Logs every guild that IvyBot is present in
     for guild in client.guilds:
@@ -31,26 +34,37 @@ async def on_ready():
 
 # Changes the "playing dungeons and dragons"    
 @tree.command(
-    name="setactivity",
+    name="setactivitystatus",
     description="Sets the bot's activity"
 )
-async def changeactivy(interaction, activity:str, status:Literal[1,2,3,4]):
-    activity = discord.Game(name=activity, type=status)
-    await client.change_presence(status = discord.Status.idle, activity=activity)
+async def bot_set_activity_status(interaction: Interaction, activity: str, status: discord.Status) -> None:
+    """_summary_
+
+    Args:
+        interaction (Interaction): _description_
+        activity (str): _description_
+        status (discord.Status): 'online', 'offline', 'idle', 'dnd(do not disturb)', 'invisible'
+    """
+    #(cbwolfe94): Seems like status isn't needed in the constructor
+    game = discord.Game(activity)
+
+    await client.change_presence(activity = game, status = status)
     await interaction.response.send_message(f"Bot activity set to {activity}.")
     
 # Takes input and splits it into readable dice commands
 @tree.command(
-    name="roll",
-    description="Rolls a number of dice in xdy+z format.",
+    name = "roll",
+    description = "Rolls a number of dice in xdy+z format.",
 )
-async def first_command(interaction, dice:str):
-    """_summary_
+async def bot_roll_dice(interaction: Interaction, dice: str) -> None:
+    """ Discord bot will roll the number of dice in xdy + z format
 
     Args:
-        interaction (_type_): _description_
-        dice (str): _description_
+        interaction (_type_): Discord interaction
+        dice (str): Dice string in xdy + z format
+        #(cbwolfe94): I would put an example of a format for anyone who doesn't know the correct way to format the dice 
     """
+
     dice.replace(" ","")
     rolled = dice
     number, sides = dice.split("d")
@@ -85,7 +99,7 @@ async def first_command(interaction, dice:str):
      name="dndstats",
      description="Rolls ability scores for D&D 5e using the 4d6 drop lowest method.",
 )
-async def fortysix(interaction):
+async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
     """_summary_
 
     Args:
@@ -109,7 +123,7 @@ async def fortysix(interaction):
     name='fireball',
     description='fireball wins again'
 )
-async def fireroll(interaction, level:int):
+async def bot_fireball_roll(interaction: Interaction, level: int) -> None:
     """_summary_
 
     Args:
@@ -136,6 +150,8 @@ async def cherry(interaction):
     Args:
         interaction (_type_): _description_
     """
+
+    #(cbwolfe94): I would change this function to a better name
 
     races = ['Dragonborn','Dwarf','Elf','Gnome','Half-Elf','Halfling','Half-Orc','Human','Tiefling']
     classes = ['Barbarian','Bard','Cleric','Druid','Fighter','Monk','Paladin','Ranger','Rogue','Sorcerer','Warlock','Wizard']
@@ -215,7 +231,7 @@ async def makepoll(interaction, items:str):
     name='dndcharacter',
     description="Generates an entire D&D character complete with ability scores, class, race, and background."
 )
-async def newcharacter(interaction):
+async def bot_make_new_character(interaction):
     """ Stitches together everything from previous interactions in order to make an entire character
 
     Args:
@@ -278,6 +294,13 @@ async def newcharacter(interaction):
     description="Displays the racial traits of any race available in the D&D 5e Player's Handbook."
 )
 async def newcharacter(interaction, race: Literal['Dwarf, Hill','Dwarf, Mountain','Elf, High','Elf, Wood','Drow','Halfling, Lightfoot','Halfling, Stout','Human','Dragonborn','Gnome, Forest','Gnome, Rock','Half-Elf','Half-Orc','Tiefling']):
+    """_summary_
+
+    Args:
+        interaction (Interaction): _description_
+        race (Literal[str]: _description_
+        #(cbwolfe94) You shouldn't have to define the list of strings literal in the function parameter. The type hint should just be Literal[str]
+    """
     traitlist = ''
     racial_traits = {
         'Dwarf, Hill': ['Ability Score Increase: Constitution: +2, Wisdom: +1', 'Age: Up to 350 years.', 'Size: Medium', 'Speed: 25 feet', 'Darkvision', 'Dwarven Resilience', 'Dwarven Combat Training', "Tool Proficiency: Smith's tools, brewer's supplies, or mason's tools.", 'Stonecutting', 'Languages: Common, Dwarvish', 'Dwarven Toughness'],
@@ -304,11 +327,11 @@ async def newcharacter(interaction, race: Literal['Dwarf, Hill','Dwarf, Mountain
     name='dndmonster',
     description="Displays a random monster from the D&D 5e Monster Manual."
 )
-async def newmonster(interaction):
+async def newmonster(interaction: Interaction) -> None:
     """_summary_
 
     Args:
-        interaction (_type_): _description_
+        interaction (Interaction): _description_
     """
 
     monsters = [
@@ -508,13 +531,13 @@ async def seattleroll(interaction, skill:Literal["Barter", "Big Guns", "Energy W
     name="schargen",
     description="Generates a new character for Fallout: Seattle."
 )
-async def seattlechargen(interaction, race:Literal["RANDOM","Human - Vault Dweller","Human - Wastelander","Ghoul","Synth - Unaware","Synth - Aware",
+async def seattlechargen(interaction: Interaction, race: Literal["RANDOM","Human - Vault Dweller","Human - Wastelander","Ghoul","Synth - Unaware","Synth - Aware",
                                                    "Robot - Mister Handy","Robot - Assaultron","Robot - Protectron"]):
     """ 
 
     Args:
         interaction (_type_): _description_
-        race (Literal[&quot;RANDOM&quot;,&quot;Human): _description_
+        race (Literal[str]: _description_
     """
     origins = []
     special = [1,1,1,1,1,1,1]
@@ -570,4 +593,4 @@ async def seattlechargen(interaction, race:Literal["RANDOM","Human - Vault Dwell
         
     await interaction.response.send_message(f"**STR:** {special[0]}\n**PER:** {special[1]}\n**END:** {special[2]}\n**CHR:** {special[3]}\n**INT:** {special[4]}\n**AGI:** {special[5]}\n**LUK:** {special[6]}\n**Race:** {race}\n**Origin:** {origin}")
 
-client.run(TOKEN)
+client.run(CBWOLFE94_TOKEN)
