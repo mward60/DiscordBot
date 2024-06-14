@@ -299,7 +299,8 @@ async def newcharacter(interaction, race: Literal['Dwarf, Hill','Dwarf, Mountain
     Args:
         interaction (Interaction): _description_
         race (Literal[str]: _description_
-        #(cbwolfe94) You shouldn't have to define the list of strings literal in the function parameter. The type hint should just be Literal[str]
+        # (cbwolfe94) You shouldn't have to define the list of strings literal in the function parameter. The type hint should just be Literal[str]. 
+        # Honestly it could be just a string.
     """
     traitlist = ''
     racial_traits = {
