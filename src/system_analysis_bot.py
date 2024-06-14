@@ -1,17 +1,12 @@
 import discord, random
-from discord import app_commands, Button, Interaction
+from discord import app_commands, Interaction, Intents, Client
 from typing import Literal, Optional
+from discord_token import *
 
 # This is what allows our code to interface with Discord
-intents = discord.Intents.default()
-client = discord.Client(intents=discord.Intents.all())
+intents = Intents.default()
+client = Client(intents = Intents.all())
 tree = app_commands.CommandTree(client)
-
-# Unique bot token that can't be put online or else Discord forces a re-generation
-TOKEN='MTIyNDQzMTU4ODcxMzAzNzgyNA.GJfs0-.Gv3YsfrsL1rwAWIIwUAweE9XBNOoVoxBfK_s7A'
-# (cbwolfe94) This is the token I generated for the test discord server I set up. The above token probably isn't working anymore because you might
-# have generated a new token.
-CBWOLFE94_TOKEN = "MTI1MDI5NDQzMTE0NDIxODcwNw.GOyjmb.ENwN_vLjfzPMFuYE1WVnTK_bGgvzsZ9xV5DAXY"
 
 @client.event
 async def on_ready() -> None:
@@ -19,6 +14,7 @@ async def on_ready() -> None:
     """
 
     print("Setting bot activity...")
+
     dnd_game = discord.Game(name="Dungeons and Dragons", type = 3)
     await client.change_presence(activity = dnd_game, status = discord.Status.idle)
     print(f"Bot activity set to {dnd_game}.")
@@ -68,9 +64,11 @@ async def bot_roll_dice(interaction: Interaction, dice: str) -> None:
     dice.replace(" ","")
     rolled = dice
     number, sides = dice.split("d")
+
     # Checking for whether or not a modifier exists
     if sides.isnumeric():
         modifier = 0
+
     else:
         if "+" in sides:
             sides, modifier = sides.split("+")
@@ -594,4 +592,4 @@ async def seattlechargen(interaction: Interaction, race: Literal["RANDOM","Human
         
     await interaction.response.send_message(f"**STR:** {special[0]}\n**PER:** {special[1]}\n**END:** {special[2]}\n**CHR:** {special[3]}\n**INT:** {special[4]}\n**AGI:** {special[5]}\n**LUK:** {special[6]}\n**Race:** {race}\n**Origin:** {origin}")
 
-client.run(CBWOLFE94_TOKEN)
+client.run(TOKEN)
