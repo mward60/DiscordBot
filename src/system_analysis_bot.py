@@ -1,35 +1,37 @@
+#!/usr/bin/env python3
+
 import discord, random
-from discord import app_commands, Interaction, Intents, Client
+from discord import app_commands, Interaction, Intents, Client, Game, Status
 from typing import Literal, Optional
 from discord_token import *
+from guild.guild import *
 
 # This is what allows our code to interface with Discord
 intents = Intents.default()
-client = Client(intents = Intents.all())
-tree = app_commands.CommandTree(client)
+discord_client = Client(intents = Intents.all())
+command_tree = app_commands.CommandTree(discord_client)
 
-@client.event
+@discord_client.event
 async def on_ready() -> None:
     """ Sets the bot to "Playing Dungeons and Dragons"
     """
 
     print("Setting bot activity...")
 
-    dnd_game = discord.Game(name="Dungeons and Dragons", type = 3)
-    await client.change_presence(activity = dnd_game, status = discord.Status.idle)
-    print(f"Bot activity set to {dnd_game}.")
+    dnd_discord_game = Game(name = "Dungeons and Dragons", type = 3)
+
+    await discord_client.change_presence(activity = dnd_discord_game, status = Status.idle)
+    print(f"Bot activity set to {dnd_discord_game}.")
     
     # Logs every guild that IvyBot is present in
-    for guild in client.guilds:
-        tree.copy_global_to(guild=guild)
-        await tree.sync(guild=guild)
-        print(f'{client.user.name} is connected to {guild.name}.')
-        print(f'Server Members ({len(guild.members)}):')
-        for member in guild.members:
-            print(f'- {member.name}')
+    for guild in discord_client.guilds:
+        command_tree.copy_global_to(guild = guild)
+        await command_tree.sync(guild = guild)
+    
+    log_bot_guild_presence(discord_client)
 
 # Changes the "playing dungeons and dragons"    
-@tree.command(
+@command_tree.command(
     name="setactivitystatus",
     description="Sets the bot's activity"
 )
@@ -44,11 +46,11 @@ async def bot_set_activity_status(interaction: Interaction, activity: str, statu
     #(cbwolfe94): Seems like status isn't needed in the constructor
     game = discord.Game(activity)
 
-    await client.change_presence(activity = game, status = status)
+    await discord_client.change_presence(activity = game, status = status)
     await interaction.response.send_message(f"Bot activity set to {activity}.")
     
 # Takes input and splits it into readable dice commands
-@tree.command(
+@command_tree.command(
     name = "roll",
     description = "Rolls a number of dice in xdy+z format.",
 )
@@ -64,7 +66,6 @@ async def bot_roll_dice(interaction: Interaction, dice: str) -> None:
     dice.replace(" ","")
     rolled = dice
     number, sides = dice.split("d")
-
     # Checking for whether or not a modifier exists
     if sides.isnumeric():
         modifier = 0
@@ -93,7 +94,7 @@ async def bot_roll_dice(interaction: Interaction, dice: str) -> None:
     else:
         await interaction.response.send_message(f'**Result: {total + modifier}**  `{rolled} = {rolls} ({modifier})`')
 
-@tree.command(
+@command_tree.command(
      name="dndstats",
      description="Rolls ability scores for D&D 5e using the 4d6 drop lowest method.",
 )
@@ -117,7 +118,7 @@ async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
     attributes.sort(reverse=True)
     await interaction.response.send_message(f'**Ability Scores: {attributes}**\n{results}') 
 
-@tree.command(
+@command_tree.command(
     name='fireball',
     description='fireball wins again'
 )
@@ -138,7 +139,7 @@ async def bot_fireball_roll(interaction: Interaction, level: int) -> None:
     total = sum(rolls)
     await interaction.response.send_message(f'**Result: {total} fire damage!** `{level+5}d6 = {rolls}`' + ' https://tenor.com/view/xptolevel3-xptolvl3-jacob-budz-jacob-budz-gif-27231246')
 
-@tree.command(
+@command_tree.command(
     name='dndidea',
     description='Generates a random race and class for your next 5e character.',
 )
@@ -193,7 +194,7 @@ async def cherry(interaction):
         await interaction.response.send_message(f'You should play a {charsubrace} {charrace} {charclass} with the {charbackground} background!')    
 
 # Sadly this command was overshadowed by Discord itself in a recent update
-@tree.command(
+@command_tree.command(
     name='vote',
     description='Separate up to six phrases with commas to create a call for a vote.'
 )
@@ -225,11 +226,11 @@ async def makepoll(interaction, items:str):
             # Reacts with each emoji so people can click them
             await new_msg.add_reaction(emojis[i])
 
-@tree.command(
+@command_tree.command(
     name='dndcharacter',
     description="Generates an entire D&D character complete with ability scores, class, race, and background."
 )
-async def bot_make_new_character(interaction):
+async def bot_make_new_character(interaction: Interaction) -> None:
     """ Stitches together everything from previous interactions in order to make an entire character
 
     Args:
@@ -287,7 +288,7 @@ async def bot_make_new_character(interaction):
     else:
         await interaction.response.send_message(f'**{charbackground} {charsubrace} {charrace} {charclass}\nAbility Scores: {attributes}**\n{results}Remember to apply your racial attribute modifiers!')
 
-@tree.command(
+@command_tree.command(
     name='dndracials',
     description="Displays the racial traits of any race available in the D&D 5e Player's Handbook."
 )
@@ -322,7 +323,7 @@ async def newcharacter(interaction, race: Literal['Dwarf, Hill','Dwarf, Mountain
         traitlist += f'{trait}\n'     
     await interaction.response.send_message(f'Racial traits for {race}:\n{traitlist}')
 
-@tree.command(
+@command_tree.command(
     name='dndmonster',
     description="Displays a random monster from the D&D 5e Monster Manual."
 )
@@ -495,7 +496,7 @@ async def newmonster(interaction: Interaction) -> None:
     await interaction.response.send_message(f"A wild {pick} has appeared!")
 
 # This is from a game I have been working on for some time
-@tree.command(
+@command_tree.command(
     name="sroll",
     description="Rolls a skill check for Fallout: Seattle. Roll-at-or-under is a success!"
 )
@@ -526,7 +527,7 @@ async def seattleroll(interaction, skill:Literal["Barter", "Big Guns", "Energy W
             else:
                 await interaction.response.send_message(f"You rolled a **{roll}** and **failed** the {skill} {value} skill check.")
 
-@tree.command(
+@command_tree.command(
     name="schargen",
     description="Generates a new character for Fallout: Seattle."
 )
@@ -592,4 +593,15 @@ async def seattlechargen(interaction: Interaction, race: Literal["RANDOM","Human
         
     await interaction.response.send_message(f"**STR:** {special[0]}\n**PER:** {special[1]}\n**END:** {special[2]}\n**CHR:** {special[3]}\n**INT:** {special[4]}\n**AGI:** {special[5]}\n**LUK:** {special[6]}\n**Race:** {race}\n**Origin:** {origin}")
 
-client.run(TOKEN)
+def main() -> int:
+    """ Main entry point for discord bot application
+
+    Returns:
+        int: Returns 0 on successful execution of program
+    """
+    print("Connecting to IvyBot on discord client ... \r\n")
+    discord_client.run(TOKEN)
+    return 0
+
+if __name__ == "__main__":
+    main()
