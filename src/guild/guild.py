@@ -1,7 +1,7 @@
 from discord import app_commands, Interaction, Intents, Client 
 
 def log_bot_guild_presence(discord_client: Client) -> None:
-    """ Logs the bot's guild presence
+    """ Logs Ivy Bot's guild presence
 
     Args:
         discord_client (Client): Discord client
