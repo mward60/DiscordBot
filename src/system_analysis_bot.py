@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import discord, random
 from discord import app_commands, Interaction, Intents, Client, Game, Status
 from typing import Literal, Optional
 from discord_token import *
 from guild.guild import *
+from dnd_helpers.dice import *
+from dnd_helpers.types.enums import DiceReturnCode
 
 # This is what allows our code to interface with Discord
 intents = Intents.default()
@@ -23,7 +24,7 @@ async def on_ready() -> None:
     await discord_client.change_presence(activity = dnd_discord_game, status = Status.idle)
     print(f"Bot activity set to {dnd_discord_game}.")
     
-    # Logs every guild that IvyBot is present in
+    # 
     for guild in discord_client.guilds:
         command_tree.copy_global_to(guild = guild)
         await command_tree.sync(guild = guild)
@@ -35,18 +36,17 @@ async def on_ready() -> None:
     name="setactivitystatus",
     description="Sets the bot's activity"
 )
-async def bot_set_activity_status(interaction: Interaction, activity: str, status: discord.Status) -> None:
-    """_summary_
+async def bot_set_activity_status(interaction: Interaction, activity: str, activity_status: Status) -> None:
+    """ Set's the activity status
 
-    Args:
-        interaction (Interaction): _description_
-        activity (str): _description_
-        status (discord.Status): 'online', 'offline', 'idle', 'dnd(do not disturb)', 'invisible'
+        interaction (Interaction): Discord interaction
+        activity_status (str): Activity status to be set
+        status (Status): 'online', 'offline', 'idle', 'dnd(do not disturb)', 'invisible'
     """
-    #(cbwolfe94): Seems like status isn't needed in the constructor
-    game = discord.Game(activity)
+    #(cbwolfe94): Seems like status isn't needed in the constructor, could be wrong
+    dnd_discord_game = Game(activity)
 
-    await discord_client.change_presence(activity = game, status = status)
+    await discord_client.change_presence(activity = dnd_discord_game, status = activity_status)
     await interaction.response.send_message(f"Bot activity set to {activity}.")
     
 # Takes input and splits it into readable dice commands
@@ -54,7 +54,7 @@ async def bot_set_activity_status(interaction: Interaction, activity: str, statu
     name = "roll",
     description = "Rolls a number of dice in xdy+z format.",
 )
-async def bot_roll_dice(interaction: Interaction, dice: str) -> None:
+async def bot_roll_dice(interaction: Interaction, dice_str: str) -> None:
     """ Discord bot will roll the number of dice in xdy + z format
 
     Args:
@@ -63,36 +63,13 @@ async def bot_roll_dice(interaction: Interaction, dice: str) -> None:
         #(cbwolfe94): I would put an example of a format for anyone who doesn't know the correct way to format the dice 
     """
 
-    dice.replace(" ","")
-    rolled = dice
-    number, sides = dice.split("d")
-    # Checking for whether or not a modifier exists
-    if sides.isnumeric():
-        modifier = 0
+    dice = Dice()
+    
+    if dice_string_parse(dice_str, dice) == DiceReturnCode.DICE_RETURN_CODE_SUCCESS:
+        await interaction.response.send_message(dice.roll_dice)
 
     else:
-        if "+" in sides:
-            sides, modifier = sides.split("+")
-            modifier = int(modifier)
-        elif "-" in sides:
-            sides, modifier = sides.split("-")
-            modifier = int(modifier) * -1
-        else:
-            await interaction.response.send_message(f"Please use xdy+z format for dice rolling with this command.")
-    number = int(number)
-    sides = int(sides)
-    rolls = []
-    for i in range(number):
-        rolls.append(random.randint(1,sides))
-    total = sum(rolls)
-    # Rolls should be sorted to look a little neater
-    rolls.sort(reverse=True)
-    if modifier == 0:
-        await interaction.response.send_message(f'**Result: {total}**  `{rolled} = {rolls}`')
-    elif modifier > 0:
-        await interaction.response.send_message(f'**Result: {total + modifier}**  `{rolled} = {rolls} (+{modifier})`')
-    else:
-        await interaction.response.send_message(f'**Result: {total + modifier}**  `{rolled} = {rolls} ({modifier})`')
+        await interaction.response.send_message(f"Please use xdy+z format for dice rolling with this command.")
 
 @command_tree.command(
      name="dndstats",
@@ -102,7 +79,7 @@ async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
     """_summary_
 
     Args:
-        interaction (_type_): _description_
+        interaction (_type_): Discord interaction
     """
     results = ""
     attributes = [0,0,0,0,0,0]
@@ -120,23 +97,26 @@ async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
 
 @command_tree.command(
     name='fireball',
-    description='fireball wins again'
+    description='fireball wins again' # Probably needs a better description
 )
-async def bot_fireball_roll(interaction: Interaction, level: int) -> None:
-    """_summary_
+async def bot_fireball_roll(interaction: Interaction, fireball_level: int) -> None:
+    """ 
 
     Args:
-        interaction (_type_): _description_
-        level (int): _description_
+        interaction (_type_): Discord interaction
+        fireball_level (int): Level of fireball to be rolled
     """
-    if level < 3:
+    if fireball_level < 3:
         await interaction.response.send_message(f'Fireball is a 3rd-level spell. Try again.')
-    if level > 9:
+    
+    if fireball_level > 9:
         await interaction.response.send_message(f"You can't cast spells higher than 9th-level. Try again.")
+    
     rolls = []
-    for i in range (0,5+level):
+    for i in range (0, 5 + fireball_level):
         rolls.append(random.randint(1,6))
     total = sum(rolls)
+
     await interaction.response.send_message(f'**Result: {total} fire damage!** `{level+5}d6 = {rolls}`' + ' https://tenor.com/view/xptolevel3-xptolvl3-jacob-budz-jacob-budz-gif-27231246')
 
 @command_tree.command(
@@ -599,6 +579,7 @@ def main() -> int:
     Returns:
         int: Returns 0 on successful execution of program
     """
+
     print("Connecting to IvyBot on discord client ... \r\n")
     discord_client.run(TOKEN)
     return 0
