@@ -1,2 +1,2 @@
-src/discord_token.py
+src/discord/token/discord_token.py
 __pycache__/
