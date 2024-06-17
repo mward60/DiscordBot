@@ -1,4 +1,4 @@
-from discord import app_commands, Interaction, Intents, Client 
+from discord import Client 
 
 def log_bot_guild_presence(discord_client: Client) -> None:
     """ Logs Ivy Bot's guild presence
