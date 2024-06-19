@@ -76,6 +76,16 @@ class Dice():
     def modifier(self, modifier) -> None:
         self._modifier = modifier
 
+def is_valid_dice(dice_str: str) -> bool:
+    #Check to see if string contains "d"
+        # Return failure code if it doesn't 
+
+    #Make sure "d" is in the correct part of the string
+        # Is the location of "d" at index 1?
+            # Return failure code if it's not
+    return
+
+
 def dice_string_parse(dice_str: str, dice: Dice) -> DiceReturnCode:
     """ Parses dice string and populates dice. Returns 0 if dice \
         string is valid. Returns -1 if string is invalid.
@@ -89,9 +99,12 @@ def dice_string_parse(dice_str: str, dice: Dice) -> DiceReturnCode:
     """
     
     dice_str.replace(" ","")
-    number_of_dice, number_of_sides_and_modifier = dice_str.split("d")
 
-    
+    if is_valid_dice(dice_str) == False:
+        DiceReturnCode.DICE_RETURN_CODE_FAILURE
+        return 
+
+    number_of_dice, number_of_sides_and_modifier = dice_str.split("d")
     
     # Checking for whether or not a modifier exists
     if number_of_sides_and_modifier.isnumeric():
