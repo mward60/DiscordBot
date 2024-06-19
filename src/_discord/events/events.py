@@ -1,6 +1,7 @@
 
 from ..defs.defs import *
 from ..guild.guild import *
+from discord import Game, Status
 
 @discord_client.event
 async def on_ready() -> None:
