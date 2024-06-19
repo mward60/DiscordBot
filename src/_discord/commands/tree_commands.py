@@ -1,3 +1,5 @@
+from discord import Interaction
+
 from ..defs.defs import *
 from ..guild.guild import *
 from dnd_helpers.dice import *
@@ -23,31 +25,34 @@ async def bot_roll_dice(interaction: Interaction, dice_str: str) -> None:
         await interaction.response.send_message(dice.roll_dice)
 
     else:
-        await interaction.response.send_message(f"Please use xdy+z format for dice rolling with this command.")
+        await interaction.response.send_message("Please use xdy+z format for dice rolling with this command.")
 
-# @command_tree.command(
-#      name="dndstats",
-#      description="Rolls ability scores for D&D 5e using the 4d6 drop lowest method.",
-# )
-# async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
-#     """_summary_
+@command_tree.command(
+     name="dndstats",
+     description="Rolls ability scores for D&D 5e using the 4d6 drop lowest method.",
+)
+async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
+    """_summary_
 
-#     Args:
-#         interaction (_type_): Discord interaction
-#     """
-#     results = ""
-#     attributes = [0,0,0,0,0,0]
-#     for i in range(0,6):
-#         dice = [0,0,0,0]
-#         for p in range(0,4):
-#             dice[p] = random.randint(1,6)
-#         dice.sort(reverse=True)
-#         # Stores a display value so that certain dice can be removed later
-#         results += f'`{dice}` Result: `{sum(dice) - min(dice)}`\n'
-#         dice.remove(min(dice))
-#         attributes[i] = sum(dice)
-#     attributes.sort(reverse=True)
-#     await interaction.response.send_message(f'**Ability Scores: {attributes}**\n{results}') 
+    Args:
+        interaction (_type_): Discord interaction
+    """
+    results = ""
+    attributes = [0, 0, 0, 0, 0, 0]
+
+    for i in range(0,6):
+        dice = [0,0,0,0]
+        for p in range(0,4):
+            dice[p] = random.randint(1,6)
+        dice.sort(reverse=True)
+        # Stores a display value so that certain dice can be removed later
+        results += f'`{dice}` Result: `{sum(dice) - min(dice)}`\n'
+        dice.remove(min(dice))
+        attributes[i] = sum(dice)
+
+    attributes.sort(reverse=True)
+
+    await interaction.response.send_message(f'**Ability Scores: {attributes}**\n{results}') 
 
 # @command_tree.command(
 #     name='fireball',
