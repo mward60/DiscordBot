@@ -3,6 +3,7 @@ from discord import Interaction
 from ..defs.defs import *
 from ..guild.guild import *
 from dnd_helpers.dice import *
+from dnd_helpers._attributes._attributes import *
 from dnd_helpers.types.enums import DiceReturnCode
 
 # Takes input and splits it into readable dice commands
@@ -37,22 +38,7 @@ async def bot_roll_ability_score_4d6(interaction: Interaction) -> None:
     Args:
         interaction (_type_): Discord interaction
     """
-    results = ""
-    attributes = [0, 0, 0, 0, 0, 0]
-
-    for i in range(0,6):
-        dice = [0,0,0,0]
-        for p in range(0,4):
-            dice[p] = random.randint(1,6)
-        dice.sort(reverse=True)
-        # Stores a display value so that certain dice can be removed later
-        results += f'`{dice}` Result: `{sum(dice) - min(dice)}`\n'
-        dice.remove(min(dice))
-        attributes[i] = sum(dice)
-
-    attributes.sort(reverse=True)
-
-    await interaction.response.send_message(f'**Ability Scores: {attributes}**\n{results}') 
+    await interaction.response.send_message(get_attributes()) 
 
 # @command_tree.command(
 #     name='fireball',
